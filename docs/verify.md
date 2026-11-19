@@ -27,6 +27,7 @@ sha256sum -c --ignore-missing release-hashes.txt   # every downloaded file match
 git clone -q --depth 1 --branch v1.1.0 https://github.com/AOSSIE-Org/OpenVerifiableLLM ovl-code
 OVL_DEVICE=cpu python ovl-code/simple/ovl.py verify --run . --weights conversation-model.pt
 # anchor anchor.json: chain head MATCH (38 entries)
+# anchor anchor.json: release-hashes.txt MATCH
 # anchor timestamp freetsa: OK (Oct 20 14:38:43 2026 GMT)
 # anchor timestamp digicert: OK (Oct 20 14:38:43 2026 GMT)
 # weights conversation-model.pt: MATCH chain entry 37
@@ -35,7 +36,9 @@ OVL_DEVICE=cpu python ovl-code/simple/ovl.py verify --run . --weights conversati
 `verify` checks four things:
 
 1. Every chain entry links to the hash of the previous one.
-2. The chain ends at the head recorded in `anchor.json`.
+2. The chain ends at the head recorded in `anchor.json`, and `release-hashes.txt` (next to it) has the SHA-256
+   that `anchor.json` records as `release_hashes_sha256`. So `sha256sum -c` checks the files against a list
+   that the timestamped anchor vouches for, not against a list that could have been edited with them.
 3. Both timestamps on `anchor.json` verify, for the exact bytes of `anchor.json`. DigiCert is checked
    against the system CA bundle (`/etc/ssl/certs/ca-certificates.crt` on Linux, `/etc/ssl/cert.pem`
    on macOS). FreeTSA's certificates are downloaded from freetsa.org.
@@ -45,7 +48,7 @@ OVL_DEVICE=cpu python ovl-code/simple/ovl.py verify --run . --weights conversati
    [`AOSSIE/OpenVerifiableLLM-23M`](https://huggingface.co/AOSSIE/OpenVerifiableLLM-23M), gives the same
    result (it needs `pip install safetensors`).
 
-It fails if any of these fails, or if `anchor.json` or a timestamp is missing. `--no-anchor` and
+It fails if any of these fails, or if `anchor.json`, `release-hashes.txt` or a timestamp is missing. `--no-anchor` and
 `--no-timestamps` skip those checks and print a warning; use them only for a run that has no anchor
 yet. Use `ovl.py` from the v1.1.0 tag: the copy in the download's `code/` folder is older and does
 not check the anchor.
