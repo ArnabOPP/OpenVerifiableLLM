@@ -36,7 +36,7 @@ OVL_DEVICE=cpu python ovl-code/simple/ovl.py verify --run . --weights conversati
 `verify` checks four things:
 
 1. Every chain entry links to the hash of the previous one.
-2. The chain ends at the head recorded in `anchor.json`, and `release-hashes.txt` (next to it) has the SHA-256
+2. The chain ends at the head recorded in `anchor.json`, and `release-hashes.txt` (in the run folder) has the SHA-256
    that `anchor.json` records as `release_hashes_sha256`. So `sha256sum -c` checks the files against a list
    that the timestamped anchor vouches for, not against a list that could have been edited with them.
 3. Both timestamps on `anchor.json` verify, for the exact bytes of `anchor.json`. DigiCert is checked

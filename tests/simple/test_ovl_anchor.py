@@ -38,7 +38,7 @@ def fake_chain(n):
 
 
 def write_anchor(run, chain, **extra):
-    """anchor.json for chain, committed to a release-hashes.txt that sits next to it."""
+    """anchor.json for chain, committed to a release-hashes.txt written into the same folder."""
     listing = b"0" * 64 + b"  recipe.json\n"
     (run / "release-hashes.txt").write_bytes(listing)
     anchor = {"chain_entries": len(chain), "chain_head_index": len(chain) - 1, "chain_head_sha256": link(chain[-1]),
@@ -293,12 +293,16 @@ class AnchorReleaseHashes(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "release-hashes.txt.* not found"):
             self.verify()
 
-    def test_hash_list_is_read_next_to_an_explicit_anchor(self):
+    def test_hash_list_is_read_from_the_run_folder_for_an_explicit_anchor(self):
+        # sha256sum -c reads the run folder's list, so that is the list the anchor must vouch for.
         elsewhere = self.run / "release"
         elsewhere.mkdir()
         write_anchor(elsewhere, self.chain)
-        (self.run / "release-hashes.txt").write_bytes(b"not the committed list")  # the run's own copy is ignored
+        (elsewhere / "release-hashes.txt").write_bytes(b"a list next to the anchor is ignored")
         self.assertIn("release-hashes.txt MATCH", self.verify(str(elsewhere / "anchor.json")))
+        (self.run / "release-hashes.txt").write_bytes(b"not the committed list")
+        with self.assertRaisesRegex(SystemExit, "differs from the anchor"):
+            self.verify(str(elsewhere / "anchor.json"))
 
     def test_chain_head_mismatch_is_reported_before_the_hash_list(self):
         (self.run / "release-hashes.txt").unlink()
